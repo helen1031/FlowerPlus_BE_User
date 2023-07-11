@@ -15,14 +15,14 @@ import java.util.Date;
 @Service
 public class TokenProvider {
 
-    public static final String SECRET_KEY = "84eca95e21aeb391bf95c8878e046bbfeba1582e7e09708810cb45e34944bcae";
+    public static final String SECRET_KEY = "9c8f2213d72c2e23449a2a5648ece693210f412ffe89c7628a029d5635e4ea0e55b321b11e09f1181b5ad284716bf5e2a3ed92dc899f91bdd6c0d0d6e6d4dec3";
 
     public String create(UserEntity userEntity) {
         Date expiryDate = Date.from(Instant.now().plus(1, ChronoUnit.DAYS));
 
         return Jwts.builder()
-                .signWith(SignatureAlgorithm.ES512, SECRET_KEY)
-                .setSubject(userEntity.getUserId())
+                .signWith(SignatureAlgorithm.HS512, SECRET_KEY)
+                .setSubject(Long.toString(userEntity.getUserId()))
                 .setIssuer("flower plus")
                 .setIssuedAt(new Date())
                 .setExpiration(expiryDate)

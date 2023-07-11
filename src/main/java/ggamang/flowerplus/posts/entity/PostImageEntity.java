@@ -16,7 +16,8 @@ import java.util.Date;
 @Table(name="POSTS_IMAGES")
 public class PostImageEntity {
     @Id
-    private String imageId;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long imageId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")

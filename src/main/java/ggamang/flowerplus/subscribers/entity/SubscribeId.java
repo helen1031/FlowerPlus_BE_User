@@ -13,7 +13,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class SubscribeId implements Serializable {
 
-    private String userId;
+    private Long userId;
 
-    private String subscriberId;
+    private Long subscriberId;
 }

@@ -13,8 +13,8 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostImageDTO {
-    private String imageId;
-    private String postId;
+    private Long imageId;
+    private Long postId;
     private String imageUrl;
     private Date createdDate;
 

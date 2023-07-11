@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostDetailDTO {
-    private String postId;
+    private Long postId;
     private int height;
     private String feature;
     private int quantity;

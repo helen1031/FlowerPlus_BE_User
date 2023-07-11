@@ -21,7 +21,7 @@ public class SubscriberController {
 
     // 구독 등록
     @PostMapping
-    public ResponseEntity<?> createSubscriber(@AuthenticationPrincipal String userId,
+    public ResponseEntity<?> createSubscriber(@AuthenticationPrincipal Long userId,
                                               @RequestBody SubscriberDTO subscriberDTO) {
         try {
             SubscriberEntity subscriberEntity = SubscriberDTO.toEntity(subscriberDTO);
@@ -35,8 +35,8 @@ public class SubscriberController {
 
     // 구독 삭제
     @DeleteMapping("/{subscriberId}")
-    public ResponseEntity<?> deleteSubscriber(@AuthenticationPrincipal String userId,
-                                              @PathVariable String subscriberId) {
+    public ResponseEntity<?> deleteSubscriber(@AuthenticationPrincipal Long userId,
+                                              @PathVariable Long subscriberId) {
         try {
             subscriberService.deleteSubscriber(new SubscribeId(userId, subscriberId));
             return ResponseEntity.ok().build();
@@ -48,7 +48,7 @@ public class SubscriberController {
 
     // 내 구독자 목록 조회하기
     @GetMapping("/my-subscribers")
-    public ResponseEntity<List<SubscriberDTO>> getMySubscribers(@AuthenticationPrincipal String userId) {
+    public ResponseEntity<List<SubscriberDTO>> getMySubscribers(@AuthenticationPrincipal Long userId) {
         List<SubscriberEntity> mySubscriberEntities = subscriberService.getSubscribers(userId);
         List<SubscriberDTO> mySubscribers = mySubscriberEntities.stream()
                 .map(SubscriberDTO::fromEntity)
@@ -58,8 +58,8 @@ public class SubscriberController {
 
     // (관리자용) 유저별 구독자 목록 조회하기
     @GetMapping("/user-subscribers")
-    public ResponseEntity<List<SubscriberDTO>> getUserSubscribers(@AuthenticationPrincipal String userId,
-                                                                  @RequestParam("userId") String searchUserId) {
+    public ResponseEntity<List<SubscriberDTO>> getUserSubscribers(@AuthenticationPrincipal Long serId,
+                                                                  @RequestParam("userId") Long searchUserId) {
         List<SubscriberEntity> userSubscriberEntities = subscriberService.getSubscribers(searchUserId);
         List<SubscriberDTO> userSubscribers = userSubscriberEntities.stream()
                 .map(SubscriberDTO::fromEntity)
