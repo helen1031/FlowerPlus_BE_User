@@ -9,12 +9,12 @@ import java.util.Collection;
 import java.util.List;
 
 @Repository
-public interface PostRepository extends JpaRepository<PostEntity, String> {
-    PostEntity findByPostId(String postId);
+public interface PostRepository extends JpaRepository<PostEntity, Long> {
+    PostEntity findByPostId(Long postId);
 
-    List<PostEntity> findByUserIdOrderByCreatedDateDesc(String userId);
+    List<PostEntity> findByUserIdOrderByCreatedDateDesc(Long userId);
 
-    List<PostEntity> findByUserIdInOrderByCreatedDateDesc(List<String> subscriberIds);
+    List<PostEntity> findByUserIdInOrderByCreatedDateDesc(List<Long> subscriberIds);
 
     List<PostEntity> findAllByPostRangeInOrderByCreatedDateDesc(Collection<PostRange> postRanges);
 }

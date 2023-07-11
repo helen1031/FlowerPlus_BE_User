@@ -1,7 +1,6 @@
 package ggamang.flowerplus.posts.controller;
 
 import ggamang.flowerplus.common.dto.ResponseDTO;
-import ggamang.flowerplus.files.service.FileService;
 import ggamang.flowerplus.posts.dto.PostDTO;
 import ggamang.flowerplus.posts.dto.PostDetailDTO;
 import ggamang.flowerplus.posts.dto.PostImageDTO;
@@ -12,6 +11,7 @@ import ggamang.flowerplus.subscribers.service.SubscriberService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -29,12 +29,11 @@ public class PostController {
     @Autowired
     private SubscriberService subscriberService;
 
-    @Autowired
-    private FileService fileService;
 
     // 게시물 등록
     @PostMapping
-    public ResponseEntity<?> createPost(@RequestBody PostDTO newPostDTO){
+    public ResponseEntity<?> createPost(@AuthenticationPrincipal Long userId,
+                                        @RequestBody PostDTO newPostDTO){
         try {
             PostEntity postEntity = PostDTO.toEntity(newPostDTO);
             PostDetailEntity postDetailEntity = PostDetailDTO.toEntity(newPostDTO.getPostDetail());
@@ -44,11 +43,11 @@ public class PostController {
             // 이미지 업로드
             for (PostImageDTO imageDTO : newPostDTO.getImages()) {
                 // base64 string -> byte[] 변환
-                byte[] byteImage = fileService.convertBase64ToImage(imageDTO.getImage());
-                String imageUrl = fileService.uploadFile(byteImage, imageDTO.getPostId() +
-                        "_" + imageDTO.getImageId());
-                imageDTO.setImageUrl(imageUrl);
-                uploadedImages.add(imageDTO);
+//                byte[] byteImage = fileService.convertBase64ToImage(imageDTO.getImage());
+//                String imageUrl = fileService.uploadFile(byteImage, imageDTO.getPostId() +
+//                        "_" + imageDTO.getImageId());
+//                imageDTO.setImageUrl(imageUrl);
+//                uploadedImages.add(imageDTO);
             }
 
             PostEntity savedPost = postService.createPost(postEntity, postDetailEntity, uploadedImages);
@@ -63,7 +62,8 @@ public class PostController {
 
     // 게시물 삭제
     @DeleteMapping("/{postID}")
-    public ResponseEntity<?> deletePost(@PathVariable String postId){
+    public ResponseEntity<?> deletePost(@AuthenticationPrincipal Long userId,
+                                        @PathVariable Long postId){
         try {
             postService.deletePost(postId);
             return ResponseEntity.ok().build();
@@ -76,7 +76,9 @@ public class PostController {
 
     // 게시물 수정
     @PutMapping("/{postId}")
-    public ResponseEntity<?> updatePost(@PathVariable String postId, @RequestBody PostDTO updatedPostDTO){
+    public ResponseEntity<?> updatePost(@AuthenticationPrincipal Long userId,
+                                        @PathVariable Long postId,
+                                        @RequestBody PostDTO updatedPostDTO){
         try {
             PostEntity postEntity = PostDTO.toEntity(updatedPostDTO);
             PostDetailEntity postDetailEntity = PostDetailDTO.toEntity(updatedPostDTO.getPostDetail());
@@ -85,10 +87,10 @@ public class PostController {
 
             for (PostImageDTO imageDTO : updatedPostDTO.getImages()) {
                 // base64 string -> byte[] 변환
-                byte[] byteImage = fileService.convertBase64ToImage(imageDTO.getImage());
-                String imageUrl = fileService.uploadFile(byteImage, imageDTO.getPostId() + "_" + imageDTO.getImageId());
-                imageDTO.setImageUrl(imageUrl);
-                uploadedImages.add(imageDTO);
+//                byte[] byteImage = fileService.convertBase64ToImage(imageDTO.getImage());
+//                String imageUrl = fileService.uploadFile(byteImage, imageDTO.getPostId() + "_" + imageDTO.getImageId());
+//                imageDTO.setImageUrl(imageUrl);
+//                uploadedImages.add(imageDTO);
             }
 
             PostEntity updatedPost = postService.updatePost(postId, postEntity, postDetailEntity, uploadedImages);
@@ -103,7 +105,8 @@ public class PostController {
 
     // 게시물 조회_0.특정 게시물
     @GetMapping("/{postId}")
-    public ResponseEntity<?> getPostById(@PathVariable String postId) {
+    public ResponseEntity<?> getPostById(@AuthenticationPrincipal String userId,
+                                         @PathVariable Long postId) {
         try {
             PostEntity post = postService.getPostById(postId);
             PostDTO postDTO = PostDTO.fromEntity(post);
@@ -117,7 +120,7 @@ public class PostController {
 
     // 게시물 조회_1. 자기 게시물
     @GetMapping("/my-posts")
-    public ResponseEntity<List<PostDTO>> getMyPosts(@RequestParam("userId") String userId) {
+    public ResponseEntity<List<PostDTO>> getMyPosts(@AuthenticationPrincipal Long userId) {
         List<PostEntity> myPosts = postService.getPostsByUserId(userId);
         List<PostDTO> myPostsDTO = myPosts.stream()
                 .map(PostDTO::fromEntity)
@@ -128,8 +131,8 @@ public class PostController {
 
     // 게시물 조회_2. 구독자 게시물
     @GetMapping("/subscriber-posts")
-    public ResponseEntity<List<PostDTO>> getSubscriberPosts(@RequestParam("userId") String userId) {
-        List<String> subscriberIds = subscriberService.getSubscribersIds(userId);
+    public ResponseEntity<List<PostDTO>> getSubscriberPosts(@AuthenticationPrincipal Long userId) {
+        List<Long> subscriberIds = subscriberService.getSubscribersIds(userId);
 
         List<PostEntity> subscriberPosts = postService.getSubscriberPosts(subscriberIds);
         List<PostDTO> subscriberPostsDTO = subscriberPosts.stream()
@@ -141,7 +144,7 @@ public class PostController {
 
     // 게시물 조회_3. 공개 범위 전체인 전체 게시물 조회
     @GetMapping("/public-posts")
-    public ResponseEntity<List<PostDTO>> getPublicPosts() {
+    public ResponseEntity<List<PostDTO>> getPublicPosts(@AuthenticationPrincipal Long userId) {
         List<PostEntity> publicPosts = postService.getPublicPosts();
         List<PostDTO> publicPostsDTO = publicPosts.stream()
                 .map(PostDTO::fromEntity)
@@ -152,7 +155,7 @@ public class PostController {
 
     // 게시물 조회_4. (관리자용) 전체 게시물 조회
     @GetMapping("/all-posts")
-    public ResponseEntity<List<PostDTO>> getAllPosts() {
+    public ResponseEntity<List<PostDTO>> getAllPosts(@AuthenticationPrincipal Long userId) {
         List<PostEntity> allPosts = postService.getAllPosts();
         List<PostDTO> allPostsDTO = allPosts.stream()
                 .map(PostDTO::fromEntity)

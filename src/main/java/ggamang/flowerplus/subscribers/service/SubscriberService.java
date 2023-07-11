@@ -17,13 +17,13 @@ public class SubscriberService {
     @Autowired
     private SubscriberRepository subscriberRepository;
 
-    public List<SubscriberEntity> getSubscribers(final String userId) {
+    public List<SubscriberEntity> getSubscribers(final Long userId) {
         return subscriberRepository.findAllByIdUserId(userId);
     }
 
-    public List<String> getSubscribersIds(final String userId){
+    public List<Long> getSubscribersIds(final Long userId){
         List<SubscriberEntity> subscribers = subscriberRepository.findAllByIdUserId(userId);
-        List<String> subscriberIds = subscribers.stream()
+        List<Long> subscriberIds = subscribers.stream()
                 .map(subscriber -> subscriber.getId().getSubscriberId())
                 .collect(Collectors.toList());
         return subscriberIds;

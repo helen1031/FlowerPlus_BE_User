@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostDTO {
-    private String postId;
+    private Long postId;
     private String userId;
     private PostRange postRange;
     private boolean isForExchange;

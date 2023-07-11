@@ -16,7 +16,7 @@ import javax.persistence.*;
 @Table(name="POSTS_DETAILS")
 public class PostDetailEntity {
     @Id
-    private String postId;
+    private Long postId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId

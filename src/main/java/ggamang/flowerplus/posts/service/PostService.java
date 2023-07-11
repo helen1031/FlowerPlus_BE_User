@@ -44,13 +44,13 @@ public class PostService {
     }
 
     // 게시물 삭제
-    public void deletePost(String postId) {
+    public void deletePost(Long postId) {
         postRepository.deleteById(postId);
         log.info("Post Entity Id : {} is deleted", postId);
     }
 
     // 게시물 수정
-    public PostEntity updatePost(String postId,
+    public PostEntity updatePost(Long postId,
                                  final PostEntity updatedPostEntity,
                                  final PostDetailEntity updatedPostDetailEntity,
                                  final List<PostImageDTO> updatedPostImages) {
@@ -90,17 +90,17 @@ public class PostService {
     }
 
     // 게시물 조회_0. 특정 게시물
-    public PostEntity getPostById(final String postId) {
+    public PostEntity getPostById(final Long postId) {
         return postRepository.findByPostId(postId);
     }
 
     // 게시물 조회_1. 자기 게시물
-    public List<PostEntity> getPostsByUserId(final String userId){
+    public List<PostEntity> getPostsByUserId(final Long userId){
         return postRepository.findByUserIdOrderByCreatedDateDesc(userId);
     }
 
     // 게시물 조회_2. 구독자 게시물
-    public List<PostEntity> getSubscriberPosts(final List<String> subscriberIds) {
+    public List<PostEntity> getSubscriberPosts(final List<Long> subscriberIds) {
         return postRepository.findByUserIdInOrderByCreatedDateDesc(subscriberIds);
     }
 
