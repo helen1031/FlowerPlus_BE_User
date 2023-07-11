@@ -22,7 +22,7 @@ public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private String userId;
-    private String email;
+    private String email; // 아이디
     private String password;
     private String username;
     private String nickname;

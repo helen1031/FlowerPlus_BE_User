@@ -6,6 +6,7 @@ import ggamang.flowerplus.subscribers.entity.SubscriberEntity;
 import ggamang.flowerplus.subscribers.service.SubscriberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,11 +19,10 @@ public class SubscriberController {
     @Autowired
     private SubscriberService subscriberService;
 
-    String userId = "temp";
-
     // 구독 등록
     @PostMapping
-    public ResponseEntity<?> createSubscriber(@RequestBody SubscriberDTO subscriberDTO) {
+    public ResponseEntity<?> createSubscriber(@AuthenticationPrincipal String userId,
+                                              @RequestBody SubscriberDTO subscriberDTO) {
         try {
             SubscriberEntity subscriberEntity = SubscriberDTO.toEntity(subscriberDTO);
             subscriberService.createSubscriber(subscriberEntity);
@@ -35,7 +35,8 @@ public class SubscriberController {
 
     // 구독 삭제
     @DeleteMapping("/{subscriberId}")
-    public ResponseEntity<?> deleteSubscriber(@PathVariable String subscriberId) {
+    public ResponseEntity<?> deleteSubscriber(@AuthenticationPrincipal String userId,
+                                              @PathVariable String subscriberId) {
         try {
             subscriberService.deleteSubscriber(new SubscribeId(userId, subscriberId));
             return ResponseEntity.ok().build();
@@ -47,7 +48,7 @@ public class SubscriberController {
 
     // 내 구독자 목록 조회하기
     @GetMapping("/my-subscribers")
-    public ResponseEntity<List<SubscriberDTO>> getMySubscribers() {
+    public ResponseEntity<List<SubscriberDTO>> getMySubscribers(@AuthenticationPrincipal String userId) {
         List<SubscriberEntity> mySubscriberEntities = subscriberService.getSubscribers(userId);
         List<SubscriberDTO> mySubscribers = mySubscriberEntities.stream()
                 .map(SubscriberDTO::fromEntity)
@@ -57,8 +58,9 @@ public class SubscriberController {
 
     // (관리자용) 유저별 구독자 목록 조회하기
     @GetMapping("/user-subscribers")
-    public ResponseEntity<List<SubscriberDTO>> getUserSubscribers(@RequestParam("userId") String userId) {
-        List<SubscriberEntity> userSubscriberEntities = subscriberService.getSubscribers(userId);
+    public ResponseEntity<List<SubscriberDTO>> getUserSubscribers(@AuthenticationPrincipal String userId,
+                                                                  @RequestParam("userId") String searchUserId) {
+        List<SubscriberEntity> userSubscriberEntities = subscriberService.getSubscribers(searchUserId);
         List<SubscriberDTO> userSubscribers = userSubscriberEntities.stream()
                 .map(SubscriberDTO::fromEntity)
                 .collect(Collectors.toList());
