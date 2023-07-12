@@ -65,9 +65,9 @@ jobs:
         port: 22
         script: |
           sudo docker rm -f $(docker ps -qa)
-          sudo docker pull ${{ secrets.DOCKER_REPO }}/flowerplus-be
-          docker-compose up -d
-          docker image prune -f
+          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/flowerplus-be
+          sudo docker run -d -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/flowerplus-be
+          sudo docker image prune -f
     
     ## Slack 알림
     - name: Send Slack notification
