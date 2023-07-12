@@ -37,10 +37,13 @@ jobs:
         sed -i "s|spring.profiles.active=local|spring.profiles.active=dev|" ./src/main/resources/application.properties
         
     #$ application-dev.properties 수정
-    - name: Modify application-dev.properties
+    - name: Modify application-dev.properties, application-file.properties
       run: |
         sed -i "s|#spring.datasource.url=|spring.datasource.url=${{ secrets.RDS_DB_URL }}|" ./src/main/resources/application-dev.properties
         sed -i "s|#spring.datasource.password=|spring.datasource.password=${{ secrets.RDS_DB_PW }}|" ./src/main/resources/application-dev.properties
+        
+        sed -i "s|#cloud.aws.credentials.accessKey=|cloud.aws.credentials.accessKey=${{ secrets.S3_ACCESS_KEY }}|" ./src/main/resources/application-file.properties
+        sed -i "s|#cloud.aws.credentials.secretKey=|cloud.aws.credentials.secretKey=${{ secrets.S3_SECRET_KEY }}|" ./src/main/resources/application-file.properties
         
     ## Gradle Build (test 제외)
     - name: Grant execute permission for gradlew

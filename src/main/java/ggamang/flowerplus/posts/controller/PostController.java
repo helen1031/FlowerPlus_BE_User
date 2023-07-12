@@ -1,6 +1,7 @@
 package ggamang.flowerplus.posts.controller;
 
 import ggamang.flowerplus.common.dto.ResponseDTO;
+import ggamang.flowerplus.files.FileService;
 import ggamang.flowerplus.posts.dto.PostDTO;
 import ggamang.flowerplus.posts.dto.PostDetailDTO;
 import ggamang.flowerplus.posts.dto.PostImageDTO;
@@ -29,6 +30,9 @@ public class PostController {
     @Autowired
     private SubscriberService subscriberService;
 
+    @Autowired
+    private FileService fileService;
+
 
     // 게시물 등록
     @PostMapping
@@ -43,11 +47,11 @@ public class PostController {
             // 이미지 업로드
             for (PostImageDTO imageDTO : newPostDTO.getImages()) {
                 // base64 string -> byte[] 변환
-//                byte[] byteImage = fileService.convertBase64ToImage(imageDTO.getImage());
-//                String imageUrl = fileService.uploadFile(byteImage, imageDTO.getPostId() +
-//                        "_" + imageDTO.getImageId());
-//                imageDTO.setImageUrl(imageUrl);
-//                uploadedImages.add(imageDTO);
+                byte[] byteImage = fileService.convertBase64ToImage(imageDTO.getImage());
+                String imageUrl = fileService.uploadFile(byteImage, imageDTO.getPostId() +
+                        "_" + imageDTO.getImageId());
+                imageDTO.setImageUrl(imageUrl);
+                uploadedImages.add(imageDTO);
             }
 
             PostEntity savedPost = postService.createPost(postEntity, postDetailEntity, uploadedImages);
@@ -87,10 +91,10 @@ public class PostController {
 
             for (PostImageDTO imageDTO : updatedPostDTO.getImages()) {
                 // base64 string -> byte[] 변환
-//                byte[] byteImage = fileService.convertBase64ToImage(imageDTO.getImage());
-//                String imageUrl = fileService.uploadFile(byteImage, imageDTO.getPostId() + "_" + imageDTO.getImageId());
-//                imageDTO.setImageUrl(imageUrl);
-//                uploadedImages.add(imageDTO);
+                byte[] byteImage = fileService.convertBase64ToImage(imageDTO.getImage());
+                String imageUrl = fileService.uploadFile(byteImage, imageDTO.getPostId() + "_" + imageDTO.getImageId());
+                imageDTO.setImageUrl(imageUrl);
+                uploadedImages.add(imageDTO);
             }
 
             PostEntity updatedPost = postService.updatePost(postId, postEntity, postDetailEntity, uploadedImages);
