@@ -1,0 +1,80 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+# This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
+
+name: Java CI with Gradle
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+    
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    ## 기본 체크아웃
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    ## JDK 11 셋팅
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+
+    ## application.properties 수정
+    - name: Modify application.properties
+      run: |
+        sed -i "s|spring.profiles.active=local|spring.profiles.active=dev|" ./src/main/resources/application.properties
+        
+    #$ application-dev.properties 수정
+    - name: Modify application-dev.properties
+      run: |
+        sed -i "s|#spring.datasource.url=|spring.datasource.url=${{ secrets.RDS_DB_URL }}|" ./src/main/resources/application-dev.properties
+        sed -i "s|#spring.datasource.password=|spring.datasource.password=${{ secrets.RDS_DB_PW }}|" ./src/main/resources/application-dev.properties
+        
+    ## Gradle Build (test 제외)
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    - name: Build with Gradle
+      run: ./gradlew clean build --exclude-task test
+      
+    ## 도커 이미지 빌드 후 도커허브에 push하기
+    - name: Web docker build and push
+      run: |
+        docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }} .
+        docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
+        
+    ## 서버에 접속하여 도커 이미지를 pull 받고 실행하기
+    - name: Executing remote ssh commands using password
+      uses: appleboy/ssh-action@v0.1.6
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        password: ${{ secrets.EC2_PASSWORD }}
+        port: 22
+        script: |
+          sudo docker rm -f $(docker ps -qa)
+          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/flowerplus-be
+          sudo docker run -d -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/flowerplus-be
+          sudo docker image prune -f
+    
+    ## Slack 알림
+    - name: Send Slack notification
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        fields: workflow,job,commit,repo,author,took,ref
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      if: always()
