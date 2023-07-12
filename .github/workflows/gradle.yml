@@ -9,15 +9,8 @@ name: Java CI with Gradle
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "3-cicd" ]
     
-env:
-  #AWS_REGION: ap-northeast-2
-  #PROJECT_NAME: fairy-teller_be
-  #BUCKET_NAME: fairyteller-dev-deploy
-  #CODE_DEPLOY_APP_NAME: fairyteller_dev
-  #DEPLOYMENT_GROUP_NAME: fairyteller-dev-be
-
 permissions:
   contents: read
 
@@ -43,48 +36,45 @@ jobs:
       run: |
         sed -i "s|spring.profiles.active=local|spring.profiles.active=dev|" ./src/main/resources/application.properties
         
-    # (7) Gradle Build (test 제외)
+    #$ application-dev.properties 수정
+    - name: Modify application-dev.properties
+      run: |
+        sed -i "s|#spring.datasource.url=|spring.datasource.url=${{ secrets.RDS_DB_URL }}|" ./src/main/resources/application-dev.properties
+        sed -i "s|#spring.datasource.password=|spring.datasource.password=${{ secrets.RDS_DB_PW }}|" ./src/main/resources/application-dev.properties
+        
+    ## Gradle Build (test 제외)
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build with Gradle
-#       uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
-#       with:
-#         arguments: build
       run: ./gradlew clean build --exclude-task test
-    
-    # (8) 압축 파일 형태로 전달
-    - name: Make Zip File
-      run: zip -qq -r ./$GITHUB_SHA.zip .
-      shell: bash
       
-    # (9) AWS 인증
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
+    ## 도커 이미지 빌드 후 도커허브에 push하기
+    - name: Web docker build and push
+      run: |
+        docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+        docker build -t ${{ secrets.DOCKER_REPO }} .
+        docker push ${{ secrets.DOCKER_REPO }}
+        
+    ## 서버에 접속하여 도커 이미지를 pull 받고 실행하기
+    - name: Executing remote ssh commands using password
+      uses: appleboy/ssh-action@v0.1.6
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_PRIVATE_ACCESS_KEY }}
-        aws-region: ap-northeast-2
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        password: ${{ secrets.EC2_PASSWORD }}
+        port: 22
+        script: |
+          sudo docker rm -f $(docker ps -qa)
+          sudo docker pull ${{ secrets.DOCKER_REPO }}/flowerplus-be
+          docker-compose up -d
+          docker image prune -f
     
-    # (10) S3 bucket으로 copy
-    - name: Upload to S3
-      run: aws s3 cp --region ap-northeast-2 ./$GITHUB_SHA.zip s3://$BUCKET_NAME/$PROJECT_NAME/$GITHUB_SHA.zip
-    
-    # (11) EC2 배포
-    - name: Code Deploy To EC2 instance
-      run: aws deploy create-deployment 
-                --application-name ${{env.CODE_DEPLOY_APP_NAME}} 
-                --deployment-config-name CodeDeployDefault.AllAtOnce 
-                --deployment-group-name ${{env.DEPLOYMENT_GROUP_NAME}}  
-                --s3-location bucket=$BUCKET_NAME,bundleType=zip,key=$PROJECT_NAME/$GITHUB_SHA.zip
-    
-    # (12) Slack 알림
+    ## Slack 알림
     - name: Send Slack notification
       uses: 8398a7/action-slack@v3
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       with:
         status: ${{ job.status }}
-        fields: deployment-status,commit,author,repository,event-name
-        deployment: ${{ env.DEPLOYMENT_GROUP_NAME }}
-        environment: ${{ env.PROJECT_NAME }}
-        message: "Deployment completed successfully."
+        fields: workflow,job,commit,repo,author,took,ref
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      if: always()
