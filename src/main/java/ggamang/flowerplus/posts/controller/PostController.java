@@ -1,6 +1,7 @@
 package ggamang.flowerplus.posts.controller;
 
 import ggamang.flowerplus.common.dto.ResponseDTO;
+import ggamang.flowerplus.files.FileService;
 import ggamang.flowerplus.posts.dto.PostDTO;
 import ggamang.flowerplus.posts.dto.PostDetailDTO;
 import ggamang.flowerplus.posts.dto.PostImageDTO;
@@ -14,7 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +32,9 @@ public class PostController {
     @Autowired
     private SubscriberService subscriberService;
 
+    @Autowired
+    private FileService fileService;
+
 
     // 게시물 등록
     @PostMapping
@@ -38,17 +44,23 @@ public class PostController {
             PostEntity postEntity = PostDTO.toEntity(newPostDTO);
             PostDetailEntity postDetailEntity = PostDetailDTO.toEntity(newPostDTO.getPostDetail());
 
+            // userId 설정
+            postEntity.setUserId(userId);
+
             List<PostImageDTO> uploadedImages = new ArrayList<>();
 
             // 이미지 업로드
             for (PostImageDTO imageDTO : newPostDTO.getImages()) {
                 // base64 string -> byte[] 변환
-//                byte[] byteImage = fileService.convertBase64ToImage(imageDTO.getImage());
-//                String imageUrl = fileService.uploadFile(byteImage, imageDTO.getPostId() +
-//                        "_" + imageDTO.getImageId());
-//                imageDTO.setImageUrl(imageUrl);
-//                uploadedImages.add(imageDTO);
+                byte[] byteImage = fileService.convertBase64ToImage(imageDTO.getImage());
+                String imageUrl = fileService.uploadFile(byteImage, imageDTO.getPostId() +
+                        "_" + imageDTO.getImageId());
+                imageDTO.setImageUrl(imageUrl);
+                uploadedImages.add(imageDTO);
             }
+
+            // createdTime 설정
+            postEntity.setCreatedDate(new Date());
 
             PostEntity savedPost = postService.createPost(postEntity, postDetailEntity, uploadedImages);
             PostDTO savedPostDTO = PostDTO.fromEntity(savedPost);
@@ -87,10 +99,10 @@ public class PostController {
 
             for (PostImageDTO imageDTO : updatedPostDTO.getImages()) {
                 // base64 string -> byte[] 변환
-//                byte[] byteImage = fileService.convertBase64ToImage(imageDTO.getImage());
-//                String imageUrl = fileService.uploadFile(byteImage, imageDTO.getPostId() + "_" + imageDTO.getImageId());
-//                imageDTO.setImageUrl(imageUrl);
-//                uploadedImages.add(imageDTO);
+                byte[] byteImage = fileService.convertBase64ToImage(imageDTO.getImage());
+                String imageUrl = fileService.uploadFile(byteImage, imageDTO.getPostId() + "_" + imageDTO.getImageId());
+                imageDTO.setImageUrl(imageUrl);
+                uploadedImages.add(imageDTO);
             }
 
             PostEntity updatedPost = postService.updatePost(postId, postEntity, postDetailEntity, uploadedImages);

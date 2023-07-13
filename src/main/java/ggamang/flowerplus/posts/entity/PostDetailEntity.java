@@ -23,7 +23,7 @@ public class PostDetailEntity {
     @JoinColumn(name = "post_id")
     private PostEntity post;
 
-    private int height;
+    private String height;
 
     private String feature;
 

@@ -20,10 +20,12 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class PostDTO {
     private Long postId;
-    private String userId;
+    private Long userId;
     private PostRange postRange;
-    private boolean isForExchange;
-    private boolean isForSale;
+
+    private boolean forExchange;
+
+    private boolean forSale;
     private String flowerName;
     private String content;
     private FlowerType flowerType;
@@ -36,8 +38,8 @@ public class PostDTO {
         this.postId = entity.getPostId();
         this.userId = entity.getUserId();
         this.postRange = entity.getPostRange();
-        this.isForExchange = entity.isForExchange();
-        this.isForSale = entity.isForSale();
+        this.forExchange = entity.isForExchange();
+        this.forSale = entity.isForSale();
         this.flowerName = entity.getFlowerName();
         this.content = entity.getContent();
         this.flowerType = entity.getFlowerType();
@@ -60,8 +62,8 @@ public class PostDTO {
                 .postId(dto.getPostId())
                 .userId(dto.getUserId())
                 .postRange(dto.getPostRange())
-                .isForExchange(dto.isForExchange())
-                .isForSale(dto.isForSale())
+                .forExchange(dto.isForExchange())
+                .forSale(dto.isForSale())
                 .flowerName(dto.flowerName)
                 .content(dto.getContent())
                 .flowerType(dto.getFlowerType())

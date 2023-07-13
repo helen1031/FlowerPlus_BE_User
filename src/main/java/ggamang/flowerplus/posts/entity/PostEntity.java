@@ -23,14 +23,14 @@ public class PostEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long postId;
 
-    private String userId;
+    private Long userId;
 
     @Enumerated(EnumType.STRING)
     private PostRange postRange;
 
-    private boolean isForExchange;
+    private boolean forExchange;
 
-    private boolean isForSale;
+    private boolean forSale;
 
     private String flowerName;
 
