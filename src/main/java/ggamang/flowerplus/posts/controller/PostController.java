@@ -15,7 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,6 +44,9 @@ public class PostController {
             PostEntity postEntity = PostDTO.toEntity(newPostDTO);
             PostDetailEntity postDetailEntity = PostDetailDTO.toEntity(newPostDTO.getPostDetail());
 
+            // userId 설정
+            postEntity.setUserId(userId);
+
             List<PostImageDTO> uploadedImages = new ArrayList<>();
 
             // 이미지 업로드
@@ -53,6 +58,9 @@ public class PostController {
                 imageDTO.setImageUrl(imageUrl);
                 uploadedImages.add(imageDTO);
             }
+
+            // createdTime 설정
+            postEntity.setCreatedDate(new Date());
 
             PostEntity savedPost = postService.createPost(postEntity, postDetailEntity, uploadedImages);
             PostDTO savedPostDTO = PostDTO.fromEntity(savedPost);

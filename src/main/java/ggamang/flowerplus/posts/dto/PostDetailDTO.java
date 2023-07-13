@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PostDetailDTO {
     private Long postId;
-    private int height;
+    private String height;
     private String feature;
     private int quantity;
 
