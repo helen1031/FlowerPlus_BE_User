@@ -193,7 +193,7 @@ public class PostController {
 
     // 게시물 조회_3. 공개 범위 전체인 전체 게시물 조회
     @GetMapping("/public-posts")
-    public ResponseEntity<List<PostDTO>> getPublicPosts(@AuthenticationPrincipal Long userId) {
+    public ResponseEntity<List<PostDTO>> getPublicPosts() {
         List<PostEntity> publicPosts = postService.getPublicPosts();
         List<PostDTO> publicPostsDTO = publicPosts.stream()
                 .map(PostDTO::fromEntity)
