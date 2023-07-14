@@ -70,15 +70,15 @@ public class PostController {
 
                 // 임시 이름으로 우선 저장하여 이미지 아이디 채번
                 String initialImageName = "temp";
-                String imageUrl = fileService.uploadFile(byteImage, savedPost.getPostId() +
-                        "_" + initialImageName+".png");
+                String fileName = savedPost.getPostId() + "_" + initialImageName+".png";
+                String imageUrl = fileService.uploadFile(byteImage, fileName);
                 imageDTO.setImageUrl(imageUrl);
                 PostImageEntity postImageEntity =  imageDTO.toEntity(imageDTO, savedPost);
                 PostImageEntity savedImageEntity = postImageService.createPostImage(postImageEntity);
 
                 // rename하여 정식 이름으로 업데이트
                 String newImageName = savedPost.getPostId() + "_" + savedImageEntity.getImageId()+".png";
-                String newImageUrl = fileService.renameFile(imageUrl, newImageName);
+                String newImageUrl = fileService.renameFile(fileName, newImageName);
 
                 savedImageEntity.setPost(savedPost);
                 savedImageEntity.setImageUrl(newImageUrl);

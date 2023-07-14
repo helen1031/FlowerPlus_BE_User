@@ -30,7 +30,7 @@ public class FileService {
     @Value("${upload.path}")
     private String localUrl;
 
-    private AmazonS3Client amazonS3Client;
+    private final AmazonS3Client amazonS3Client;
 
     private final Environment environment;
 
@@ -115,7 +115,12 @@ public class FileService {
     }
 
     private String renameInS3(String oldName, String newName) {
+        log.info(oldName);
         try {
+            if (!amazonS3Client.doesObjectExist(bucket, oldName)) {
+                throw new RuntimeException("The specified key does not exist in Amazon S3: " + oldName);
+            }
+
             // copy the old file to the new file
             amazonS3Client.copyObject(bucket, oldName, bucket, newName);
 
@@ -131,9 +136,8 @@ public class FileService {
             throw e;
         }
     }
-
-    private String renameLocalFile(String oldPath, String newName) {
-        File oldFile = new File(oldPath);
+    private String renameLocalFile(String oldName, String newName) {
+        File oldFile = new File(localUrl + "/" + oldName);
         File newFile = new File(localUrl + "/" + newName);
         log.info("oldFile: "+ oldFile);
         log.info("newFile: "+newFile);
