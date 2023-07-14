@@ -7,6 +7,9 @@ import ggamang.flowerplus.posts.dto.PostDetailDTO;
 import ggamang.flowerplus.posts.dto.PostImageDTO;
 import ggamang.flowerplus.posts.entity.PostDetailEntity;
 import ggamang.flowerplus.posts.entity.PostEntity;
+import ggamang.flowerplus.posts.entity.PostImageEntity;
+import ggamang.flowerplus.posts.service.PostDetailService;
+import ggamang.flowerplus.posts.service.PostImageService;
 import ggamang.flowerplus.posts.service.PostService;
 import ggamang.flowerplus.subscribers.service.SubscriberService;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +31,12 @@ public class PostController {
 
     @Autowired
     private PostService postService;
-
+    @Autowired
+    private PostDetailService postDetailService;
+    @Autowired
+    private PostImageService postImageService;
     @Autowired
     private SubscriberService subscriberService;
-
     @Autowired
     private FileService fileService;
 
@@ -41,29 +46,51 @@ public class PostController {
     public ResponseEntity<?> createPost(@AuthenticationPrincipal Long userId,
                                         @RequestBody PostDTO newPostDTO){
         try {
+
+            // 1. postEntity 를 저장한다
             PostEntity postEntity = PostDTO.toEntity(newPostDTO);
-            PostDetailEntity postDetailEntity = PostDetailDTO.toEntity(newPostDTO.getPostDetail());
-
-            // userId 설정
             postEntity.setUserId(userId);
+            postEntity.setCreatedDate(new Date());
+            PostEntity savedPost = postService.createPost(postEntity);
 
-            List<PostImageDTO> uploadedImages = new ArrayList<>();
+            // 2. postDetailEntity를 저장한다
+            PostDetailEntity postDetailEntity = PostDetailDTO.toEntity(newPostDTO.getPostDetail());
+            postDetailEntity.setPostId(savedPost.getPostId());
+            postDetailEntity.setPost(savedPost);
+            PostDetailEntity savedPostDetailEntity = postDetailService.createPostDetail(postDetailEntity);
+            savedPost.setPostDetail(savedPostDetailEntity);
 
-            // 이미지 업로드
+            // 3. postImageEntity 각각 저장한다.
+            List<PostImageEntity> postImageEntities = new ArrayList<>();
             for (PostImageDTO imageDTO : newPostDTO.getImages()) {
+                //imageDTO.setPostId(newPostDTO.getPostId());
+
                 // base64 string -> byte[] 변환
                 byte[] byteImage = fileService.convertBase64ToImage(imageDTO.getImage());
-                String imageUrl = fileService.uploadFile(byteImage, imageDTO.getPostId() +
-                        "_" + imageDTO.getImageId());
+
+                // 임시 이름으로 우선 저장하여 이미지 아이디 채번
+                String initialImageName = "temp";
+                String imageUrl = fileService.uploadFile(byteImage, savedPost.getPostId() +
+                        "_" + initialImageName+".png");
                 imageDTO.setImageUrl(imageUrl);
-                uploadedImages.add(imageDTO);
+                PostImageEntity postImageEntity =  imageDTO.toEntity(imageDTO, savedPost);
+                PostImageEntity savedImageEntity = postImageService.createPostImage(postImageEntity);
+
+                // rename하여 정식 이름으로 업데이트
+                String newImageName = savedPost.getPostId() + "_" + savedImageEntity.getImageId()+".png";
+                String newImageUrl = fileService.renameFile(imageUrl, newImageName);
+
+                savedImageEntity.setPost(savedPost);
+                savedImageEntity.setImageUrl(newImageUrl);
+                savedImageEntity.setCreatedDate(new Date());
+
+                PostImageEntity finalImageEntity = postImageService.updatePostImage(savedImageEntity);
+                postImageEntities.add(finalImageEntity);
             }
-
-            // createdTime 설정
-            postEntity.setCreatedDate(new Date());
-
-            PostEntity savedPost = postService.createPost(postEntity, postDetailEntity, uploadedImages);
+            savedPost.setImages(postImageEntities);
+            log.info("savedPost: "+savedPost);
             PostDTO savedPostDTO = PostDTO.fromEntity(savedPost);
+            log.info("savedPostDTO: "+savedPostDTO);
             return ResponseEntity.ok().body(savedPostDTO);
         } catch(Exception e) {
             String error = e.getMessage();
@@ -92,28 +119,38 @@ public class PostController {
                                         @PathVariable Long postId,
                                         @RequestBody PostDTO updatedPostDTO){
         try {
+            // Convert DTOs to entities
             PostEntity postEntity = PostDTO.toEntity(updatedPostDTO);
             PostDetailEntity postDetailEntity = PostDetailDTO.toEntity(updatedPostDTO.getPostDetail());
 
-            List<PostImageDTO> uploadedImages = new ArrayList<>();
+            // Update postEntity
+            PostEntity updatedPost = postService.updatePost(postEntity);
 
+            // Update postDetailEntity
+            postDetailService.updatePostDetail(postDetailEntity);
+
+            // Update postImageEntity
             for (PostImageDTO imageDTO : updatedPostDTO.getImages()) {
-                // base64 string -> byte[] 변환
+                // Convert base64 string -> byte[]
                 byte[] byteImage = fileService.convertBase64ToImage(imageDTO.getImage());
-                String imageUrl = fileService.uploadFile(byteImage, imageDTO.getPostId() + "_" + imageDTO.getImageId());
+                // Upload image and set URL
+                String imageUrl = fileService.uploadFile(byteImage, postId + "_" + imageDTO.getImageId());
                 imageDTO.setImageUrl(imageUrl);
-                uploadedImages.add(imageDTO);
+                // Convert DTO to entity and update
+                PostImageEntity postImageEntity = PostImageDTO.toEntity(imageDTO, updatedPost);
+                postImageService.updatePostImage(postImageEntity);
             }
 
-            PostEntity updatedPost = postService.updatePost(postId, postEntity, postDetailEntity, uploadedImages);
             PostDTO savedPostDTO = PostDTO.fromEntity(updatedPost);
             return ResponseEntity.ok().body(savedPostDTO);
+
         } catch (Exception e) {
             String error = e.getMessage();
             ResponseDTO<PostDTO> response = ResponseDTO.<PostDTO>builder().error(error).build();
             return ResponseEntity.badRequest().body(response);
         }
     }
+
 
     // 게시물 조회_0.특정 게시물
     @GetMapping("/{postId}")

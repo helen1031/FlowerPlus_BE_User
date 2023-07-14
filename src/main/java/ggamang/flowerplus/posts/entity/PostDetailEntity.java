@@ -1,9 +1,6 @@
 package ggamang.flowerplus.posts.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.FetchType;
 import javax.persistence.*;
@@ -13,6 +10,7 @@ import javax.persistence.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = "post") // post 필드를 equals()와 hashCode()에서 제외
 @Table(name="POSTS_DETAILS")
 public class PostDetailEntity {
     @Id
@@ -21,6 +19,7 @@ public class PostDetailEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "post_id")
+    @ToString.Exclude
     private PostEntity post;
 
     private String height;

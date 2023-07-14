@@ -2,10 +2,7 @@ package ggamang.flowerplus.posts.entity;
 
 import ggamang.flowerplus.posts.FlowerType;
 import ggamang.flowerplus.posts.PostRange;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -16,6 +13,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = "postDetail") // postDetail 필드를 equals()와 hashCode()에서 제외
 @Table(name="POSTS")
 public class PostEntity {
 
@@ -47,6 +45,7 @@ public class PostEntity {
     private Date updateDate;
 
     @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
     private PostDetailEntity postDetail;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)

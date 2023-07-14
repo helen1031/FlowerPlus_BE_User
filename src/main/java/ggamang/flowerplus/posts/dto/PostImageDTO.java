@@ -1,5 +1,6 @@
 package ggamang.flowerplus.posts.dto;
 
+import ggamang.flowerplus.posts.entity.PostEntity;
 import ggamang.flowerplus.posts.entity.PostImageEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,9 +38,10 @@ public class PostImageDTO {
                 .build();
     }
 
-    public static PostImageEntity toEntity(PostImageDTO dto) {
+    public static PostImageEntity toEntity(PostImageDTO dto, PostEntity postEntity) {
         PostImageEntity postImageEntity = new PostImageEntity();
         postImageEntity.setImageId(dto.getImageId());
+        postImageEntity.setPost(postEntity);
         postImageEntity.setCreatedDate(dto.getCreatedDate());
         postImageEntity.setImageUrl(dto.getImageUrl());
         return postImageEntity;
