@@ -13,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Objects;
 
@@ -95,7 +96,55 @@ public class FileService {
         String base64Data = base64Image.replaceAll("^data:image/[a-zA-Z]+;base64,", "");
 
         byte[] imageBytes = Base64.getDecoder().decode(base64Data);
+        log.debug("Decoded image data: {}", Arrays.toString(imageBytes));
+
         ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
         return bis.readAllBytes();
     }
+
+    public String renameFile(String oldName, String newName) {
+        String activeProfiles = environment.getProperty("spring.profiles.active");
+        if (activeProfiles != null && activeProfiles.contains("dev")) {
+            if (amazonS3Client == null) {
+                throw new RuntimeException("AmazonS3Client is not initialized");
+            }
+            return renameInS3(oldName, newName);
+        } else {
+            return renameLocalFile(oldName, newName);
+        }
+    }
+
+    private String renameInS3(String oldName, String newName) {
+        try {
+            // copy the old file to the new file
+            amazonS3Client.copyObject(bucket, oldName, bucket, newName);
+
+            // delete the old file
+            amazonS3Client.deleteObject(bucket, oldName);
+
+            return bucketUrl + "/" + newName;
+        } catch (AmazonS3Exception e) {
+            log.error("Failed to rename file in S3: {}", e.getMessage());
+            throw new RuntimeException("Failed to rename file in S3", e);
+        } catch (Exception e) {
+            log.error("General error: {}", e);
+            throw e;
+        }
+    }
+
+    private String renameLocalFile(String oldPath, String newName) {
+        File oldFile = new File(oldPath);
+        File newFile = new File(localUrl + "/" + newName);
+        log.info("oldFile: "+ oldFile);
+        log.info("newFile: "+newFile);
+        if (oldFile.renameTo(newFile)) {
+            log.info("File renamed to " + newName);
+            return localUrl + "/" + newName;
+        } else {
+            log.error("Failed to rename file");
+            throw new RuntimeException("Failed to rename file");
+        }
+    }
+
+
 }

@@ -23,20 +23,7 @@ public class PostService {
     private PostRepository postRepository;
 
     // 게시물 등록
-    public PostEntity createPost(final PostEntity postEntity,
-                                 final PostDetailEntity postDetailEntity,
-                                 final List<PostImageDTO> postImages) {
-        postEntity.setPostDetail(postDetailEntity);
-        postDetailEntity.setPost(postEntity);
-
-        if (postImages != null) {
-            List<PostImageEntity> postImageEntities = postImages.stream()
-                    .map(PostImageDTO::toEntity)
-                    .collect(Collectors.toList());
-            postImageEntities.forEach(postImageEntity -> postImageEntity.setPost(postEntity));
-            postEntity.setImages(postImageEntities);
-        }
-
+    public PostEntity createPost(final PostEntity postEntity) {
         postRepository.save(postEntity);
         log.info("Post Entity Id : {} is saved", postEntity.getPostId());
 
@@ -49,12 +36,14 @@ public class PostService {
         log.info("Post Entity Id : {} is deleted", postId);
     }
 
-    // 게시물 수정
-    public PostEntity updatePost(Long postId,
-                                 final PostEntity updatedPostEntity,
-                                 final PostDetailEntity updatedPostDetailEntity,
-                                 final List<PostImageDTO> updatedPostImages) {
+    public PostEntity updatePost(final PostEntity updatedPostEntity) {
+        // Fetch the post to be updated
+        Long postId = updatedPostEntity.getPostId();
         PostEntity previousPostEntity = postRepository.findByPostId(postId);
+        if (previousPostEntity == null) {
+            throw new IllegalArgumentException("Post with id: " + postId + " does not exist");
+        }
+
         previousPostEntity.setPostRange(updatedPostEntity.getPostRange());
         previousPostEntity.setForExchange(updatedPostEntity.isForExchange());
         previousPostEntity.setForSale(updatedPostEntity.isForSale());
@@ -63,31 +52,13 @@ public class PostService {
         previousPostEntity.setFlowerType(updatedPostEntity.getFlowerType());
         previousPostEntity.setUpdateDate(new Date());
 
-        PostDetailEntity postDetailEntity = previousPostEntity.getPostDetail();
-        if (postDetailEntity != null) {
-            postDetailEntity.setHeight(updatedPostDetailEntity.getHeight());
-            postDetailEntity.setFeature(updatedPostDetailEntity.getFeature());
-            postDetailEntity.setQuantity(updatedPostDetailEntity.getQuantity());
-        } else {
-            postDetailEntity = updatedPostDetailEntity;
-            postDetailEntity.setPost(previousPostEntity);
-        }
-        previousPostEntity.setPostDetail(postDetailEntity);
-
-        if (updatedPostImages != null) {
-            List<PostImageEntity> updatedPostImageEntities = updatedPostImages.stream()
-                    .map(PostImageDTO::toEntity)
-                    .collect(Collectors.toList());
-            updatedPostImageEntities.forEach(postImageEntity -> postImageEntity.setPost(previousPostEntity));
-            previousPostEntity.setImages(updatedPostImageEntities);
-        }
-
         postRepository.save(previousPostEntity);
 
         log.info("Post Entity Id : {} is updated", postId);
 
         return postRepository.findByPostId(postId);
     }
+
 
     // 게시물 조회_0. 특정 게시물
     public PostEntity getPostById(final Long postId) {

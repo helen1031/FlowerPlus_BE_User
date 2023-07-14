@@ -10,8 +10,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Data
@@ -75,14 +77,19 @@ public class PostDTO {
             PostDetailEntity postDetailEntity = PostDetailDTO.toEntity(dto.getPostDetail());
             postEntity.setPostDetail(postDetailEntity);
             postDetailEntity.setPost(postEntity);
+        }  else {
+            postEntity.setPostDetail(new PostDetailEntity());
         }
 
         if (dto.getImages() != null) {
             List<PostImageEntity> imageEntities = dto.getImages().stream()
-                    .map(PostImageDTO::toEntity)
+                    .map(imageDTO -> PostImageDTO.toEntity(imageDTO, postEntity))
                     .collect(Collectors.toList());
             postEntity.setImages(imageEntities);
+        } else {
+            postEntity.setImages(new ArrayList<>());
         }
+
 
         return postEntity;
     }
@@ -99,6 +106,40 @@ public class PostDTO {
         postDTO.setFlowerType(postEntity.getFlowerType());
         postDTO.setCreatedDate(postEntity.getCreatedDate());
         postDTO.setUpdateDate(postEntity.getUpdateDate());
+
+        // Set postDetail only if it is not null
+        if (postEntity.getPostDetail() != null) {
+            try {
+                postDTO.setPostDetail(new PostDetailDTO(postEntity.getPostDetail()));
+            } catch (Exception e) {
+                System.err.println("Failed to convert PostDetailEntity to PostDetailDTO: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            postDTO.setPostDetail(null);
+        }
+
+        // Set images if the list is not null or empty
+        if (postEntity.getImages() != null && !postEntity.getImages().isEmpty()) {
+            try {
+                postDTO.setImages(postEntity.getImages().stream().map(imageEntity -> {
+                    try {
+                        return new PostImageDTO(imageEntity);
+                    } catch (Exception e) {
+                        System.err.println("Failed to convert PostImageEntity to PostImageDTO: " + e.getMessage());
+                        e.printStackTrace();
+                        return null;
+                    }
+                }).filter(Objects::nonNull).collect(Collectors.toList()));
+            } catch (Exception e) {
+                System.err.println("Failed to convert PostImageEntity list to PostImageDTO list: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            postDTO.setImages(null);
+        }
+
+
         return postDTO;
     }
 }
