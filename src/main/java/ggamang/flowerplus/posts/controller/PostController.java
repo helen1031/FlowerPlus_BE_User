@@ -203,8 +203,8 @@ public class PostController {
     }
 
     // 게시물 조회_4. 공개 범위 전체인 특정 ID의 게시물 조회
-    @GetMapping("/{otherUserId}")
-    public ResponseEntity<List<PostDTO>> getPostsByUserId(@AuthenticationPrincipal String userId,
+    @GetMapping("/user/{otherUserId}")
+    public ResponseEntity<List<PostDTO>> getPostsByUserId(@AuthenticationPrincipal Long userId,
                                                           @PathVariable Long otherUserId) {
         List<PostEntity> publicPosts = postService.getOthersPostsByUserId(otherUserId);
         List<PostDTO> otherIdPostDTO = publicPosts.stream()
