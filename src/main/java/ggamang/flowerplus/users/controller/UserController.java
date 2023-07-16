@@ -2,6 +2,7 @@ package ggamang.flowerplus.users.controller;
 
 import ggamang.flowerplus.common.dto.ResponseDTO;
 import ggamang.flowerplus.security.TokenProvider;
+import ggamang.flowerplus.users.UserRole;
 import ggamang.flowerplus.users.dto.UserDTO;
 import ggamang.flowerplus.users.entity.UserEntity;
 import ggamang.flowerplus.users.service.UserService;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Date;
 
 @Slf4j
 @RestController
@@ -37,13 +40,20 @@ public class UserController {
 
             UserEntity user = UserEntity.builder()
                     .email(userDTO.getEmail())
+                    .username(userDTO.getUsername())
+                    .nickname(userDTO.getNickname())
                     .password(passwordEncoder.encode(userDTO.getPassword()))
+                    .createdDate(new Date())
+                    .role(UserRole.USER)
                     .build();
 
             UserEntity registeredUser = userService.create(user);
+
             UserDTO responseUserDTO = UserDTO.builder()
                     .userId(registeredUser.getUserId())
                     .email(registeredUser.getEmail())
+                    .username(registeredUser.getUsername())
+                    .nickname(registeredUser.getNickname())
                     .build();
 
             return ResponseEntity.ok().body(responseUserDTO);
@@ -63,6 +73,8 @@ public class UserController {
                     .email(user.getEmail())
                     .userId(user.getUserId())
                     .token(token)
+                    .username(user.getUsername())
+                    .nickname(user.getNickname())
                     .build();
             return ResponseEntity.ok().body(responseUserDTO);
         } else {
