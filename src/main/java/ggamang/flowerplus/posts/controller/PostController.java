@@ -100,7 +100,7 @@ public class PostController {
     }
 
     // 게시물 삭제
-    @DeleteMapping("/{postID}")
+    @DeleteMapping("/{postId}")
     public ResponseEntity<?> deletePost(@AuthenticationPrincipal Long userId,
                                         @PathVariable Long postId){
         try {
