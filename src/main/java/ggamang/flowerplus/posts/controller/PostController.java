@@ -202,7 +202,19 @@ public class PostController {
         return ResponseEntity.ok(publicPostsDTO);
     }
 
-    // 게시물 조회_4. (관리자용) 전체 게시물 조회
+    // 게시물 조회_4. 공개 범위 전체인 특정 ID의 게시물 조회
+    @GetMapping("/{otherUserId}")
+    public ResponseEntity<List<PostDTO>> getPostsByUserId(@AuthenticationPrincipal String userId,
+                                                          @PathVariable Long otherUserId) {
+        List<PostEntity> publicPosts = postService.getOthersPostsByUserId(otherUserId);
+        List<PostDTO> otherIdPostDTO = publicPosts.stream()
+                .map(PostDTO::fromEntity)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(otherIdPostDTO);
+    }
+
+    // 게시물 조회_5. (관리자용) 전체 게시물 조회
     @GetMapping("/all-posts")
     public ResponseEntity<List<PostDTO>> getAllPosts(@AuthenticationPrincipal Long userId) {
         List<PostEntity> allPosts = postService.getAllPosts();
