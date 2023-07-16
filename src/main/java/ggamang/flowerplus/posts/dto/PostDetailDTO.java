@@ -35,6 +35,7 @@ public class PostDetailDTO {
 
     public static PostDetailEntity toEntity(PostDetailDTO dto) {
         return PostDetailEntity.builder()
+                .postId(dto.getPostId())
                 .height(dto.getHeight())
                 .feature(dto.getFeature())
                 .quantity(dto.getQuantity())
