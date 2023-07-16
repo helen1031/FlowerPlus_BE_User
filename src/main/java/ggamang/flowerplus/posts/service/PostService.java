@@ -81,7 +81,12 @@ public class PostService {
         return postRepository.findAllByPostRangeInOrderByCreatedDateDesc(publicRange);
     }
 
-    // 게시물 조회_4. (관리자용) 전체 게시물 조회
+    public List<PostEntity> getOthersPostsByUserId(final Long otherUserId) {
+        List<PostRange> publicRange = Collections.singletonList(PostRange.PUBLIC);
+        return postRepository.findAllByUserIdPostRangeInOrderByCreatedDateDesc(otherUserId, publicRange);
+    }
+
+    // 게시물 조회_5. (관리자용) 전체 게시물 조회
     public List<PostEntity> getAllPosts() {
         return postRepository.findAll();
     }
