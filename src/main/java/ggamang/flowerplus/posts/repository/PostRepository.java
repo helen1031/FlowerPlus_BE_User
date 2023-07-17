@@ -14,7 +14,7 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
 
     List<PostEntity> findByUserIdOrderByCreatedDateDesc(Long userId);
 
-    List<PostEntity> findByUserIdInOrderByCreatedDateDesc(List<Long> subscriberIds);
+    List<PostEntity> findByUserIdInAndPostRangeNotInOrderByCreatedDateDesc(List<Long> subscriberIds, Collection<PostRange> postRanges);
 
     List<PostEntity> findAllByPostRangeInOrderByCreatedDateDesc(Collection<PostRange> postRanges);
 

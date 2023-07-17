@@ -206,7 +206,7 @@ public class PostController {
     @GetMapping("/user/{otherUserId}")
     public ResponseEntity<List<PostDTO>> getPostsByUserId(@AuthenticationPrincipal Long userId,
                                                           @PathVariable Long otherUserId) {
-        List<PostEntity> publicPosts = postService.getOthersPostsByUserId(otherUserId);
+        List<PostEntity> publicPosts = postService.getOthersPostsByUserId(userId, otherUserId);
         List<PostDTO> otherIdPostDTO = publicPosts.stream()
                 .map(PostDTO::fromEntity)
                 .collect(Collectors.toList());
