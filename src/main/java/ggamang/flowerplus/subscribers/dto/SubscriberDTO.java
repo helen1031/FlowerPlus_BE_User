@@ -14,8 +14,8 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SubscriberDTO {
-    private Long subscriberId;
     private Long userId;
+    private Long subscriberId;
     private Date createdDate;
 
     public static SubscriberDTO fromEntity(SubscriberEntity subscriberEntity) {

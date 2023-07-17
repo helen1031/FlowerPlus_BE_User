@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @Slf4j
 public class UserService {
@@ -35,6 +37,10 @@ public class UserService {
             return originalUser;
         }
         return null;
+    }
+
+    public UserEntity findUserById(final Long userId) {
+        return userRepository.findById(userId).orElse(null);
     }
 
 }
