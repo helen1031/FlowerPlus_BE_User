@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,6 +38,10 @@ public class SubscriberService {
     public void deleteSubscriber(final SubscribeId subscribeId) {
         subscriberRepository.deleteById(subscribeId);
         log.info("{} un-subscribed {}.", subscribeId.getUserId(), subscribeId.getSubscriberId());
+    }
+
+    public Optional<SubscriberEntity> findSubscriber(SubscribeId subscribeId) {
+        return subscriberRepository.findById(subscribeId);
     }
 
 
