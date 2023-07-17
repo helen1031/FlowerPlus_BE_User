@@ -6,10 +6,13 @@ import ggamang.flowerplus.posts.entity.PostDetailEntity;
 import ggamang.flowerplus.posts.entity.PostEntity;
 import ggamang.flowerplus.posts.entity.PostImageEntity;
 import ggamang.flowerplus.posts.repository.PostRepository;
+import ggamang.flowerplus.subscribers.entity.SubscribeId;
+import ggamang.flowerplus.subscribers.repository.SubscriberRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -21,6 +24,9 @@ public class PostService {
 
     @Autowired
     private PostRepository postRepository;
+
+    @Autowired
+    private SubscriberRepository subscriberRepository;
 
     // 게시물 등록
     public PostEntity createPost(final PostEntity postEntity) {
@@ -72,18 +78,28 @@ public class PostService {
 
     // 게시물 조회_2. 구독자 게시물
     public List<PostEntity> getSubscriberPosts(final List<Long> subscriberIds) {
-        return postRepository.findByUserIdInOrderByCreatedDateDesc(subscriberIds);
+        List<PostRange> privateRange = Collections.singletonList(PostRange.PRIVATE);
+        return postRepository.findByUserIdInAndPostRangeNotInOrderByCreatedDateDesc(subscriberIds,privateRange);
     }
 
-    // 게시물 조회_3. 공개 범위 전체인 전체 게시물 조회
+    // 게시물 조회_3. 전체 게시물 조회
     public List<PostEntity> getPublicPosts() {
         List<PostRange> publicRange = Collections.singletonList(PostRange.PUBLIC);
         return postRepository.findAllByPostRangeInOrderByCreatedDateDesc(publicRange);
     }
 
-    public List<PostEntity> getOthersPostsByUserId(final Long otherUserId) {
-        List<PostRange> publicRange = Collections.singletonList(PostRange.PUBLIC);
-        return postRepository.findAllByUserIdAndPostRangeInOrderByCreatedDateDesc(otherUserId, publicRange);
+    // 게시물 조회_4. 특정 유저 아이디의 게시물 조회(구독자라면 구독자용 게시물도 추가)
+    public List<PostEntity> getOthersPostsByUserId(final Long loggedInUserId, final Long otherUserId) {
+        List<PostRange> postRanges = new ArrayList<>();
+        postRanges.add(PostRange.PUBLIC);
+
+        boolean isSubscribed = subscriberRepository.existsById(new SubscribeId(loggedInUserId, otherUserId));
+
+        if (isSubscribed) {
+            postRanges.add(PostRange.SUBSCRIBERS);
+        }
+
+        return postRepository.findAllByUserIdAndPostRangeInOrderByCreatedDateDesc(otherUserId, postRanges);
     }
 
 
